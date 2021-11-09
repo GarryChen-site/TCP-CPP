@@ -46,6 +46,8 @@ class TCPSender {
     // previous ack number
     size_t _abs_recv_ackno = 0;
 
+    size_t _window_size = 0;
+
 
   public:
     //! Initialize a TCPSender
