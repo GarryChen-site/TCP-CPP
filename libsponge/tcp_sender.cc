@@ -28,11 +28,51 @@ void TCPSender::fill_window() {}
 
 //! \param ackno The remote receiver's ackno (acknowledgment number)
 //! \param window_size The remote receiver's advertised window size
-void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_size) { DUMMY_CODE(ackno, window_size); }
+void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_size) 
+{ 
+    size_t abs_ackno = unwrap(ackno,_isn,_abs_recv_ackno);
+
+    // already acked
+    if(abs_ackno < _abs_recv_ackno)
+    {
+        return;
+    }
+
+    _abs_recv_ackno = abs_ackno;
+
+    _retransmission_timeout = _initial_retransmission_timeout;
+
+    _consecutive_retransmission = 0;
+
+    // if the sender has any outstanding data
+    if(!_segments_outstanding.empty())
+    {
+        _timer = 0;
+    }
+}
 
 //! \param[in] ms_since_last_tick the number of milliseconds since the last call to this method
-void TCPSender::tick(const size_t ms_since_last_tick) { DUMMY_CODE(ms_since_last_tick); }
+void TCPSender::tick(const size_t ms_since_last_tick) 
+{ 
+  _timer += ms_since_last_tick;
+  if(_timer >=_retransmission_timeout)    
+  {
+      _segments_out.push(_segments_outstanding.front());
+      _consecutive_retransmission++;
+      _retransmission_timeout *= 2;
+      _timer = 0;
+  }
+}
 
-unsigned int TCPSender::consecutive_retransmissions() const { return {}; }
+unsigned int TCPSender::consecutive_retransmissions() const 
+{ 
+    return _consecutive_retransmission; 
+}
 
-void TCPSender::send_empty_segment() {}
+void TCPSender::send_empty_segment() 
+{
+    TCPSegment seg;
+    // set the sequence number for an empty segment correctly
+    seg.header().seqno = wrap(_next_seqno,_isn);
+    _segments_out.push(seg);
+}

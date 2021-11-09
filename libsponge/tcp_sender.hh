@@ -36,9 +36,15 @@ class TCPSender {
     // retransmit the earliest segment in the queue
     std::queue<TCPSegment> _segments_outstanding{};
 
+    //! the number of times we have retransmitted the oldest segment
     size_t _retransmission_timeout = 0;
 
-    size_t _consecutive_retransmissions = 0;
+    size_t _consecutive_retransmission = 0;
+
+    size_t _timer = 0;
+
+    // previous ack number
+    size_t _abs_recv_ackno = 0;
 
 
   public:
