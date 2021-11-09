@@ -43,18 +43,21 @@ void TCPReceiver::segment_received(const TCPSegment &seg) {
     if(seg.header().fin)
     {
         _fin_flag = true;
-        _ack_accumulator++;
     }
 
     // copy() -> buffer to string
     // write data to buffer ,index from 0
+    // if fin,means the last segment, not mean contiguous,may be has hole
     _reassembler.push_substring(seg.payload().copy(), absolute_seqno-1,seg.header().fin);
 
-    // acutal data length, with SYN,FIN,and ACK
-    _ack_accumulator += _reassembler.head_index();
+    // acutal data length,head_index start from 0
+    _ack_accumulator = _reassembler.head_index() + 1;
 
-    // 
-
+    // means contiguous stream,no hole
+    if(_reassembler.input_ended())
+    {
+        _ack_accumulator++;
+    }
     
 }
 
