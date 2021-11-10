@@ -23,24 +23,43 @@ TCPSender::TCPSender(const size_t capacity, const uint16_t retx_timeout, const s
     , _stream(capacity)
     , _retransmission_timeout(retx_timeout){}
 
-uint64_t TCPSender::bytes_in_flight() const { return {}; }
+uint64_t TCPSender::bytes_in_flight() const 
+{
+     return _bytes_in_flight; 
+}
 
 void TCPSender::fill_window() 
 {
-    size_t win = _window_size > 0 ? _window_size : 1;
-    // already sending
-    size_t already_send = _next_seqno - _abs_recv_ackno;
-    size_t remain_win_size = win - already_send;
-    
-    if(remain_win_size >= 0)
+    if(!_syn_flag)
     {
-        // send as much as possible
+        TCPSegment seg;
+        seg.header().syn = true;
+        _window_size = 1;
+        send_segment(seg);
+        _syn_flag = true;
+        return;
+    }
+    size_t win = _window_size > 0 ? _window_size : 1;
+
+
+
+    size_t remain_win_size;
+
+    // send as much as possible
+    while((remain_win_size = win - (_next_seqno - _abs_recv_ackno)) != 0)
+    {
         size_t send_size = min(TCPConfig::MAX_PAYLOAD_SIZE, remain_win_size);
         TCPSegment seg;
         string data = _stream.read(send_size);
         seg.payload() = Buffer(std::move(data));
 
-        
+        // when stream is empty, then return
+        if(seg.length_in_sequence_space() == 0)
+        {
+            return;
+        }
+
+        send_segment(seg);
     }
 }
 
@@ -57,6 +76,28 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
     }
 
     _abs_recv_ackno = abs_ackno;
+
+    _window_size = window_size > 0 ? window_size : 1;
+
+    // look through and remove
+    while (!_segments_outstanding.empty())
+    {
+        TCPSegment seg = _segments_outstanding.front();
+        size_t seg_abs_ackno = unwrap(seg.header().seqno, _isn, _next_seqno); 
+        // the ackno is greater than all of the sequence numbers in the segment
+        if((seg_abs_ackno + seg.length_in_sequence_space()) <= abs_ackno)
+        {
+            // outstanding segment is acke_next_seqnod
+            _bytes_in_flight -= seg.length_in_sequence_space();
+            _segments_outstanding.pop();
+        }else
+        {
+            break;
+        }
+    }
+    
+
+    fill_window();
 
     _retransmission_timeout = _initial_retransmission_timeout;
 
@@ -93,4 +134,13 @@ void TCPSender::send_empty_segment()
     // set the sequence number for an empty segment correctly
     seg.header().seqno = wrap(_next_seqno,_isn);
     _segments_out.push(seg);
+}
+
+void TCPSender::send_segment(TCPSegment &seg) {
+    seg.header().seqno = wrap(_next_seqno,_isn);
+    _next_seqno += seg.length_in_sequence_space();
+    _bytes_in_flight += seg.length_in_sequence_space();
+    _segments_outstanding.push(seg);
+    _segments_out.push(seg);
+
 }
