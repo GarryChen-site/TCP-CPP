@@ -50,6 +50,8 @@ class TCPSender {
 
     size_t _bytes_in_flight = 0;
 
+    bool _timer_running = false;
+
     bool _syn_flag = false;
     bool _fin_flag = false;
 

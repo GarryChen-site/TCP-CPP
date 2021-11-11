@@ -46,12 +46,22 @@ void TCPSender::fill_window()
     size_t remain_win_size;
 
     // send as much as possible
-    while((remain_win_size = win - (_next_seqno - _abs_recv_ackno)) != 0)
+    // when window is full and send fin
+    while((remain_win_size = win - (_next_seqno - _abs_recv_ackno)) != 0 && !_fin_flag)
     {
         size_t send_size = min(TCPConfig::MAX_PAYLOAD_SIZE, remain_win_size);
         TCPSegment seg;
         string data = _stream.read(send_size);
         seg.payload() = Buffer(std::move(data));
+
+        // "send_window" last three case 
+        // why this can be correct ?
+        // evolution of the TCP sender did not told
+        if(_stream.eof() && _bytes_in_flight < win)
+        {
+            seg.header().fin = true;
+            _fin_flag = true;
+        }
 
         // when stream is empty, then return
         if(seg.length_in_sequence_space() == 0)
@@ -68,6 +78,12 @@ void TCPSender::fill_window()
 void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_size) 
 { 
     size_t abs_ackno = unwrap(ackno,_isn,_abs_recv_ackno);
+
+    // out of window
+    if(abs_ackno > _next_seqno)
+    {
+        return;
+    }
 
     // already acked
     if(abs_ackno < _abs_recv_ackno)
@@ -142,5 +158,10 @@ void TCPSender::send_segment(TCPSegment &seg) {
     _bytes_in_flight += seg.length_in_sequence_space();
     _segments_outstanding.push(seg);
     _segments_out.push(seg);
-
+    // start timer
+    if(!_timer_running)
+    {
+        _timer_running = true;
+        _timer = 0;
+    }
 }
