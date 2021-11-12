@@ -122,6 +122,7 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
     // if the sender has any outstanding data
     if(!_segments_outstanding.empty())
     {
+        _timer_running = true;
         _timer = 0;
     }
 }
@@ -135,6 +136,7 @@ void TCPSender::tick(const size_t ms_since_last_tick)
       _segments_out.push(_segments_outstanding.front());
       _consecutive_retransmission++;
       _retransmission_timeout *= 2;
+      _timer_running = true;
       _timer = 0;
   }
 }
