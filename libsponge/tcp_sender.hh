@@ -55,6 +55,8 @@ class TCPSender {
     bool _syn_flag = false;
     bool _fin_flag = false;
 
+    bool _is_empty_window = false;
+
     void send_segment(TCPSegment &seg);
 
   public:

@@ -34,12 +34,24 @@ void TCPSender::fill_window()
     {
         TCPSegment seg;
         seg.header().syn = true;
-        _window_size = 1;
         send_segment(seg);
         _syn_flag = true;
         return;
     }
-    size_t win = _window_size > 0 ? _window_size : 1;
+
+
+    // size_t win = _window_size > 0 ? _window_size : 1;
+    size_t win;
+    if(_window_size > 0)
+    {
+        _is_empty_window = false;
+        win = _window_size;
+    }
+    else
+    {
+        _is_empty_window = true;
+        win = 1;
+    }
 
 
 
@@ -57,7 +69,9 @@ void TCPSender::fill_window()
         // "send_window" last three case 
         // why this can be correct ?
         // evolution of the TCP sender did not told
-        if(_stream.eof() && _bytes_in_flight < win)
+        // send_extra -> "Don't add FIN if this would make the segment exceed the receiver's window""
+        if(_stream.eof()
+            && seg.length_in_sequence_space() < win)
         {
             seg.header().fin = true;
             _fin_flag = true;
@@ -85,15 +99,20 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
         return;
     }
 
+    // why there 
+    // because FIN flag occupies space in window (part II)
+    // _window_size = window_size > 0 ? window_size : 1;
+    _window_size = window_size;
+    
     // already acked
-    if(abs_ackno < _abs_recv_ackno)
+    if(abs_ackno <= _abs_recv_ackno)
     {
         return;
     }
 
     _abs_recv_ackno = abs_ackno;
 
-    _window_size = window_size > 0 ? window_size : 1;
+    
 
     // look through and remove
     while (!_segments_outstanding.empty())
@@ -131,11 +150,16 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
 void TCPSender::tick(const size_t ms_since_last_tick) 
 { 
   _timer += ms_since_last_tick;
-  if(_timer >=_retransmission_timeout)    
+  // Repeated ACKs and outdated ACKs are harmless so, !_segments_outstanding.empty()
+  if(_timer >=_retransmission_timeout && !_segments_outstanding.empty())
   {
       _segments_out.push(_segments_outstanding.front());
-      _consecutive_retransmission++;
-      _retransmission_timeout *= 2;
+    //   if((_window_size-1)!=0)
+      if(!_is_empty_window)
+      {
+          _consecutive_retransmission++;
+          _retransmission_timeout *= 2;
+      }
       _timer_running = true;
       _timer = 0;
   }
