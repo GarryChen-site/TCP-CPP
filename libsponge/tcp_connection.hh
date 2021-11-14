@@ -21,6 +21,20 @@ class TCPConnection {
     //! in case the remote TCPConnection doesn't know we've received its whole stream?
     bool _linger_after_streams_finish{true};
 
+    bool _active = true;
+    bool _need_send_rst = false;
+
+    // the connection is only done after enough time (10 × cfg.rt timeout) 
+    // has elapsed since the last segment was received
+    size_t _time_since_last_segment_received = 0;
+
+    void unclean_shutdown(bool send_rst);
+    void clean_shutdown();
+
+    // segment reading from sender.segments_out()
+    void send_segments();
+    
+
   public:
     //! \name "Input" interface for the writer
     //!@{
@@ -64,6 +78,7 @@ class TCPConnection {
 
     //! Called when a new segment has been received from the network
     void segment_received(const TCPSegment &seg);
+
 
     //! Called periodically when time elapses
     void tick(const size_t ms_since_last_tick);
