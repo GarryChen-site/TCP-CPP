@@ -58,13 +58,13 @@ void TCPConnection::segment_received(const TCPSegment &seg)
     // if the incoming segment occupied any sequence numbers
     if(seg.length_in_sequence_space() > 0)
     {
-        send_empty = true;
+        // send_empty = true;
     }
 
-    // if(send_empty)
-    // {
-    //     _sender.send_empty_segment();
-    // }
+    if(send_empty)
+    {
+        _sender.send_empty_segment();
+    }
 
     send_segments();
 
@@ -93,7 +93,7 @@ void TCPConnection::tick(const size_t ms_since_last_tick)
     {
 
     }
-    
+
 }
 
 void TCPConnection::end_input_stream() 
@@ -175,5 +175,7 @@ void TCPConnection::clean_shutdown()
         }
     }
 }
+
+
 
 

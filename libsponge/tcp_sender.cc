@@ -53,8 +53,6 @@ void TCPSender::fill_window()
         win = 1;
     }
 
-
-
     size_t remain_win_size;
 
     // send as much as possible
@@ -113,7 +111,6 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
     _abs_recv_ackno = abs_ackno;
 
     
-
     // look through and remove
     while (!_segments_outstanding.empty())
     {

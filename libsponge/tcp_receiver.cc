@@ -17,6 +17,10 @@ void TCPReceiver::segment_received(const TCPSegment &seg) {
     
     if(seg.header().syn)
     {
+        if(_syn_flag)
+        {
+            return;
+        }
         _syn_flag = true;
         _isn_set = true;
         _isn = seg.header().seqno.raw_value();
