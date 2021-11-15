@@ -49,6 +49,11 @@ void TCPReceiver::segment_received(const TCPSegment &seg) {
         _fin_flag = true;
     }
 
+    if(seg.length_in_sequence_space() == 0)
+    {
+        return;
+    }
+
     // copy() -> buffer to string
     // write data to buffer ,index from 0
     // if fin,means the last segment, not mean contiguous,may be has hole

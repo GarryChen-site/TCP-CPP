@@ -53,6 +53,8 @@ void TCPConnection::segment_received(const TCPSegment &seg)
     if(seg.header().ack)
     {
         _sender.ack_received(seg.header().ackno,seg.header().win);
+        // how to send empty segment?
+    
     }
 
     // if the incoming segment occupied any sequence numbers
@@ -91,8 +93,9 @@ void TCPConnection::tick(const size_t ms_since_last_tick)
     _sender.tick(ms_since_last_tick);
     if(_sender.consecutive_retransmissions() > TCPConfig::MAX_RETX_ATTEMPTS)
     {
-
+        unclean_shutdown(true);
     }
+    // send_segments();
 
 }
 
