@@ -40,7 +40,7 @@ void TCPConnection::segment_received(const TCPSegment &seg)
     }
     _time_since_last_segment_received = 0;
 
-    bool send_empty = false;
+    // bool send_empty = false;
 
     if(seg.header().rst)
     {
@@ -54,23 +54,35 @@ void TCPConnection::segment_received(const TCPSegment &seg)
     {
         _sender.ack_received(seg.header().ackno,seg.header().win);
         // how to send empty segment?
-        if(seg.length_in_sequence_space() == 1 && seg.header().syn)
-        {
-            send_empty = true;
-        }
+        // if(seg.length_in_sequence_space() == 1 && seg.header().syn)
+        // {
+        //     send_empty = true;
+        // }
         
-    
     }
+    _sender.fill_window();
 
     // if the incoming segment occupied any sequence numbers
-    if(seg.length_in_sequence_space() > 0)
-    {
-        // send_empty = true;
-    }
+    // if(seg.length_in_sequence_space() > 0)
+    // {
+    //     send_empty = true;
+    // }
 
-    if(send_empty)
+    // if(send_empty)
+    // {
+    //     if(_receiver.ackno().has_value() && _sender.segments_out().empty())
+    //     {
+    //         _sender.send_empty_segment();
+    //     }
+    // }
+
+    if(_sender.segments_out().empty())
     {
-        if(_receiver.ackno().has_value() && _sender.segments_out().empty())
+        if(seg.length_in_sequence_space() == 0)
+        {
+
+        }
+        else
         {
             _sender.send_empty_segment();
         }
@@ -114,7 +126,7 @@ void TCPConnection::end_input_stream()
 
 void TCPConnection::connect() 
 {
-
+    _sender.fill_window();
     send_segments();
 }
 
@@ -135,7 +147,7 @@ TCPConnection::~TCPConnection() {
 void TCPConnection::send_segments()
 {
     // fill_window decide to send syn
-    _sender.fill_window();
+    // _sender.fill_window();
 
     while(!_sender.segments_out().empty())
     {

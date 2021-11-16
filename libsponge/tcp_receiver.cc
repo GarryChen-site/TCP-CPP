@@ -12,7 +12,7 @@ using namespace std;
 
 void TCPReceiver::segment_received(const TCPSegment &seg) {
 
-    size_t data_length = 0;
+    // size_t data_length = 0;
     static size_t absolute_seqno = 0;
     
     if(seg.header().syn)
@@ -28,11 +28,11 @@ void TCPReceiver::segment_received(const TCPSegment &seg) {
         // for checkpoint
         absolute_seqno = 1;
 
-        data_length = seg.length_in_sequence_space() -1;
-        if(data_length == 0)
-        {
-            return;
-        }  
+        // data_length = seg.length_in_sequence_space() -1;
+        // if(data_length == 0)
+        // {
+        //     return;
+        // }  
     }
     // before get a SYN, refuse any segment
     else if(!_syn_flag)
@@ -42,6 +42,7 @@ void TCPReceiver::segment_received(const TCPSegment &seg) {
     else
     {
         absolute_seqno = unwrap(WrappingInt32(seg.header().seqno.raw_value()),WrappingInt32(_isn),absolute_seqno);
+        // data_length = seg.length_in_sequence_space();
     }
 
     if(seg.header().fin)
