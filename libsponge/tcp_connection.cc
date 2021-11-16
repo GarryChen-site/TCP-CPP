@@ -54,6 +54,11 @@ void TCPConnection::segment_received(const TCPSegment &seg)
     {
         _sender.ack_received(seg.header().ackno,seg.header().win);
         // how to send empty segment?
+        if(seg.length_in_sequence_space() == 1 && seg.header().syn)
+        {
+            send_empty = true;
+        }
+        
     
     }
 
@@ -65,7 +70,10 @@ void TCPConnection::segment_received(const TCPSegment &seg)
 
     if(send_empty)
     {
-        _sender.send_empty_segment();
+        if(_receiver.ackno().has_value() && _sender.segments_out().empty())
+        {
+            _sender.send_empty_segment();
+        }
     }
 
     send_segments();
