@@ -99,6 +99,8 @@ bool TCPConnection::active() const
 
 size_t TCPConnection::write(const string &data) {
     size_t ret = _sender.stream_in().write(data);
+    _sender.fill_window();
+    send_segments();
     return ret;
 }
 
