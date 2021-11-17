@@ -24,6 +24,8 @@ class TCPConnection {
     bool _active = true;
     bool _need_send_rst = false;
 
+    bool _syn_flag = false;
+
     // the connection is only done after enough time (10 × cfg.rt timeout) 
     // has elapsed since the last segment was received
     size_t _time_since_last_segment_received = 0;
