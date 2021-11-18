@@ -47,6 +47,10 @@ void TCPReceiver::segment_received(const TCPSegment &seg) {
 
     if(seg.header().fin)
     {
+        if(_fin_flag)
+        {
+            return;
+        }
         _fin_flag = true;
     }
 

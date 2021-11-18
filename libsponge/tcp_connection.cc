@@ -122,6 +122,7 @@ void TCPConnection::tick(const size_t ms_since_last_tick)
     }
     _time_since_last_segment_received += ms_since_last_tick;
     _sender.tick(ms_since_last_tick);
+    
     if(_sender.consecutive_retransmissions() > TCPConfig::MAX_RETX_ATTEMPTS)
     {
         unclean_shutdown(true);
@@ -135,6 +136,7 @@ void TCPConnection::end_input_stream()
     _sender.stream_in().end_input();
     _sender.fill_window();
     send_segments();
+    // _closed = true;
 }
 
 void TCPConnection::connect() 
