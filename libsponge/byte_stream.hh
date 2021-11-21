@@ -2,7 +2,7 @@
 #define SPONGE_LIBSPONGE_BYTE_STREAM_HH
 
 #include <string>
-#include <deque>
+#include <vector>
 
 //! \brief An in-order byte stream.
 
@@ -12,7 +12,10 @@
 class ByteStream {
   private:
 
-    std::deque<char> _buffer = {};
+    std::vector<char> _buffer;
+    size_t _head = 0;
+    size_t _tail = 0;
+    size_t _length = 0;
     size_t _capacity = 0;
     size_t _read_count = 0;
     size_t _write_count = 0;

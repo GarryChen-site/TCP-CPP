@@ -9,19 +9,32 @@ using namespace std;
 void get_URL(const string &host, const string &path) {
     // Your code here.
 
-    TCPSocket sock;
-    sock.connect(Address(host,"http"));
-    sock.write("GET " +path+ " HTTP/1.1\r\nHost: " + host + "\r\n\r\n");
-    sock.shutdown(SHUT_WR);
-    while (!sock.eof())
-    {
-        cout << sock.read();
-    }
-    sock.close();
-    return;
+    // TCPSocket sock;
+    // sock.connect(Address(host,"http"));
+    // sock.write("GET " +path+ " HTTP/1.1\r\nHost: " + host + "\r\n\r\n");
+    // sock.shutdown(SHUT_WR);
+    // while (!sock.eof())
+    // {
+    //     cout << sock.read();
+    // }
+    // sock.close();
+    // return;
 
-    cerr << "Function called: get_URL(" << host << ", " << path << ").\n";
-    cerr << "Warning: get_URL() has not been implemented yet.\n";
+    // cerr << "Function called: get_URL(" << host << ", " << path << ").\n";
+    // cerr << "Warning: get_URL() has not been implemented yet.\n";
+
+    TCPSocket socket;
+    socket.connect(Address(host, "http"));
+    socket.write("GET " + path + " HTTP/1.1\r\n");
+    socket.write("Host: " + host + "\r\n");
+    socket.write("Connection: close \r\n");
+    socket.write("\r\n");
+
+    while (!socket.eof())
+    {
+        cout << socket.read();
+    }
+    socket.close();
 }
 
 int main(int argc, char *argv[]) {

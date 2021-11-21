@@ -28,6 +28,7 @@ class StreamReassembler {
 
     std::set<block_node> _blocks = {}; 
     size_t _unassembled_byte = 0;
+    // first unread
     size_t _head_index = 0;
     bool _eof_flag = false;
     ByteStream _output;  //!< The reassembled in-order byte stream
