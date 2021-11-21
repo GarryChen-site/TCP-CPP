@@ -25,6 +25,7 @@ class TCPConnection {
     bool _need_send_rst = false;
 
     bool _syn_flag = false;
+    bool _fin_flag = false;
     // bool _closed = false;
 
     // the connection is only done after enough time (10 × cfg.rt timeout) 

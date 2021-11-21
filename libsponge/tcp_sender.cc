@@ -160,6 +160,11 @@ void TCPSender::tick(const size_t ms_since_last_tick)
       _timer_running = true;
       _timer = 0;
   }
+
+  if(_segments_outstanding.empty())
+  {
+      _timer_running = false;
+  }
 }
 
 unsigned int TCPSender::consecutive_retransmissions() const 
