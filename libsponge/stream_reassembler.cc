@@ -55,7 +55,7 @@ void StreamReassembler::push_substring(const string &data, const size_t index, c
     }
 
     block_node elm;
-    // couldn't equal, because there have empty substing
+    // couldn't = , because data have empty substing,
     // the end
     if (index + data.length() <= _head_index) {
         goto JUDGE_EOF;
@@ -89,6 +89,7 @@ void StreamReassembler::push_substring(const string &data, const size_t index, c
 
             iter = _blocks.lower_bound(elm);
         }
+        // merge next
 
         // merge prev
         if (iter == _blocks.begin()) {
@@ -108,6 +109,7 @@ void StreamReassembler::push_substring(const string &data, const size_t index, c
             }
             iter--;
         }
+        // merge prev
 
     } while (false);
     _blocks.insert(elm);
