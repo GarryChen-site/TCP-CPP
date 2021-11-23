@@ -20,17 +20,23 @@ class TCPReceiver {
     //! The maximum number of bytes we'll store.
     size_t _capacity;
 
-    bool _syn_flag = false;
+    // bool _syn_flag = false;
 
-    bool _fin_flag = false;
+    // bool _fin_flag = false;
 
-    bool _isn_set = false;
+    // bool _isn_set = false;
 
-    size_t _isn = 0;
+    // size_t _isn = 0;
 
-    size_t _ack_accumulator = 0;
+    // size_t _ack_accumulator = 0;
 
-    size_t _ackno = 0;
+    // size_t _ackno = 0;
+
+    // segment_received() to set _isn
+    // push data according to _isn 
+    // ackno calculate by _isn
+    // that's all
+    std::optional<WrappingInt32> _isn = std::nullopt;
 
   public:
     //! \brief Construct a TCP receiver

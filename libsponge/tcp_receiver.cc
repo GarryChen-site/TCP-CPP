@@ -12,75 +12,103 @@ using namespace std;
 
 void TCPReceiver::segment_received(const TCPSegment &seg) {
 
-    // size_t data_length = 0;
-    static size_t absolute_seqno = 0;
+    // // size_t data_length = 0;
+    // static size_t absolute_seqno = 0;
     
-    if(seg.header().syn)
+    // if(seg.header().syn)
+    // {
+    //     if(_syn_flag)
+    //     {
+    //         return;
+    //     }
+    //     _syn_flag = true;
+    //     _isn_set = true;
+    //     _isn = seg.header().seqno.raw_value();
+    //     _ack_accumulator = 1;
+    //     // for checkpoint
+    //     absolute_seqno = 1;
+
+
+    // }
+    // // before get a SYN, refuse any segment
+    // else if(!_syn_flag)
+    // {
+    //     return;
+    // }
+    // else
+    // {
+    //     absolute_seqno = unwrap(WrappingInt32(seg.header().seqno.raw_value()),WrappingInt32(_isn),absolute_seqno);
+    //     // data_length = seg.length_in_sequence_space();
+    // }
+
+    // if(seg.header().fin)
+    // {
+    //     if(_fin_flag)
+    //     {
+    //         return;
+    //     }
+    //     _fin_flag = true;
+    // }
+
+    // if(seg.length_in_sequence_space() == 0)
+    // {
+    //     return;
+    // }
+
+    // // copy() -> buffer to string
+    // // write data to buffer ,index from 0
+    // // if fin,means the last segment, not mean contiguous,may be has hole
+    // _reassembler.push_substring(seg.payload().copy(), absolute_seqno-1,seg.header().fin);
+
+    // // acutal data length,head_index start from 0
+    // _ack_accumulator = _reassembler.head_index() + 1;
+
+    // // means contiguous stream,no hole
+    // if(_reassembler.input_ended())
+    // {
+    //     _ack_accumulator++;
+    // }
+
+    
+    if(!_isn.has_value())
     {
-        if(_syn_flag)
+        // init _isn
+        if(seg.header().syn)
+        {
+            _isn = seg.header().seqno + 1;
+        }
+        else
         {
             return;
         }
-        _syn_flag = true;
-        _isn_set = true;
-        _isn = seg.header().seqno.raw_value();
-        _ack_accumulator = 1;
-        // for checkpoint
-        absolute_seqno = 1;
-
-        // data_length = seg.length_in_sequence_space() -1;
-        // if(data_length == 0)
-        // {
-        //     return;
-        // }  
-    }
-    // before get a SYN, refuse any segment
-    else if(!_syn_flag)
-    {
-        return;
-    }
-    else
-    {
-        absolute_seqno = unwrap(WrappingInt32(seg.header().seqno.raw_value()),WrappingInt32(_isn),absolute_seqno);
-        // data_length = seg.length_in_sequence_space();
     }
 
-    if(seg.header().fin)
-    {
-        if(_fin_flag)
-        {
-            return;
-        }
-        _fin_flag = true;
-    }
+    bool eof = seg.header().fin;
 
-    if(seg.length_in_sequence_space() == 0)
-    {
-        return;
-    }
+    std::string data = seg.payload().copy();
 
-    // copy() -> buffer to string
-    // write data to buffer ,index from 0
-    // if fin,means the last segment, not mean contiguous,may be has hole
-    _reassembler.push_substring(seg.payload().copy(), absolute_seqno-1,seg.header().fin);
-
-    // acutal data length,head_index start from 0
-    _ack_accumulator = _reassembler.head_index() + 1;
-
-    // means contiguous stream,no hole
-    if(_reassembler.input_ended())
-    {
-        _ack_accumulator++;
-    }
+    size_t index = unwrap(seg.header().seqno + (seg.header().syn ? 1 : 0),
+                          _isn.value(), _reassembler.head_index());
+    
+    _reassembler.push_substring(data, index, eof);    
     
 }
 
 optional<WrappingInt32> TCPReceiver::ackno() const 
 { 
     // use _acc_accumulator to get the ackno
-    if(_ack_accumulator > 0)
+    // if(_ack_accumulator > 0)
+    // {
+    //     return WrappingInt32(wrap(_ack_accumulator, WrappingInt32(_isn)));
+    // }
+    // else
+    // {
+    //     return nullopt;
+    // }
+
+    if(_isn.has_value())
     {
-        return WrappingInt32(wrap(_ack_accumulator, WrappingInt32(_isn)));
+        return wrap(_reassembler.head_index(), _isn.value()) + (_reassembler.input_ended() ? 1 : 0);
     }
     else
     {
