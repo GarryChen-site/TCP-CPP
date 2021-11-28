@@ -36,28 +36,30 @@ class TCPSender {
     // retransmit the earliest segment in the queue
     std::queue<TCPSegment> _segments_outstanding{};
 
+    // -------------------- new -------------------- //
+    // the first number not been acknowledged(window's left side)
+    // ---[_expect_ack]-- flight -- [_next_seqno]-- -- [windown_edn]--
+    size_t _expect_ack = 0;
+    // for fast retransmission
+    size_t _same_ack = 0;
+
+
+    size_t _window_size = 0;
+
+    size_t _timer = 0;
+
+    size_t _rto_back_off = 0;
+    size_t _do_back_off = 1;
+
+    bool _syn_flag = false;
+    bool _fin_flag = false;
+
     //! the number of times we have retransmitted the oldest segment
     size_t _retransmission_timeout = 0;
 
     size_t _consecutive_retransmission = 0;
 
-    size_t _timer = 0;
-
-    // previous ack number
-    size_t _abs_recv_ackno = 0;
-
-    size_t _window_size = 0;
-
-    size_t _bytes_in_flight = 0;
-
-    bool _timer_running = false;
-
-    bool _syn_flag = false;
-    bool _fin_flag = false;
-
-    bool _is_empty_window = false;
-
-    void send_segment(TCPSegment &seg);
+    // -------------------- new -------------------- //
 
   public:
     //! Initialize a TCPSender
