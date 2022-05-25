@@ -9,6 +9,11 @@
 * lab相关PDF
 * 《Computer Networking A Top Down Approach》8th,edition
 
+前置条件：
+
+* 实验在Ubuntu20运行
+* gcc版本9.4.0
+
 ## lab0: networking warmup
 
 ### An in-memory reliable byte stream
